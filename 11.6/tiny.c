@@ -35,7 +35,10 @@ void doit(int fd) {
   rio_t rio;
 
   Rio_readinitb(&rio, fd);
-  Rio_readlineb(&rio, buf, MAXLINE);
+  if (!Rio_readlineb(&rio, buf, MAXLINE)) {
+    return;
+  }
+
   printf("Request header:\n");
   printf("%s", buf);
   sscanf(buf, "%s %s %s", method, uri, version);
