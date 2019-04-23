@@ -5,6 +5,6 @@ project(${PROEJCT_12_36_2})
 
 set(CMAKE_CXX_STANDARD 11)
 
-add_executable(${PROEJCT_12_36_2} echoservers.h echoservers.c tiny.h tiny.c ../csapp.h ../csapp.c main.c)
+add_executable(${PROEJCT_12_36_2} echoservers.h echoservers.c tiny.h tiny.c sbuf.c sbuf.h ../csapp.h ../csapp.c main.c)
 
 TARGET_LINK_LIBRARIES(${PROEJCT_12_36_2} -lpthread)
