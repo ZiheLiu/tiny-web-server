@@ -83,8 +83,8 @@ int parse_uri(char *uri, char *filename, char *cgiargs) {
     strcat(filename, uri);
     if (uri[strlen(uri) - 1] == '/') {
       strcat(filename, "home.html");
-      return 1;
     }
+    return 1;
   } else {
     ptr = index(uri, '?');
     if (ptr) {

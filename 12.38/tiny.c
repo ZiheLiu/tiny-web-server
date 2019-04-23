@@ -2,7 +2,6 @@
 
 #include "tiny.h"
 
-
 void doit(int fd) {
   int is_static;
   struct stat sbuf;
@@ -14,7 +13,6 @@ void doit(int fd) {
   if (!Rio_readlineb(&rio, buf, MAXLINE)) {
     return;
   }
-
   printf("Request header:\n");
   printf("%s", buf);
   sscanf(buf, "%s %s %s", method, uri, version);
@@ -85,8 +83,8 @@ int parse_uri(char *uri, char *filename, char *cgiargs) {
     strcat(filename, uri);
     if (uri[strlen(uri) - 1] == '/') {
       strcat(filename, "home.html");
-      return 1;
     }
+    return 1;
   } else {
     ptr = index(uri, '?');
     if (ptr) {
