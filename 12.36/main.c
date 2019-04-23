@@ -29,8 +29,8 @@ int main(int argc, char **argv)
     if (FD_ISSET(listenfd, &pool.ready_set)) { 
       clientlen = sizeof(struct sockaddr_storage);
       connfd = Accept(listenfd, (SA *)&clientaddr, &clientlen);
-      Getnameinfo((SA *) &clientaddr, clientlen, hostname, MAXLINE, port, MAXLINE, 0);
-      printf("Accepted connection from (%s, %s)\n", hostname, port);
+//      Getnameinfo((SA *) &clientaddr, clientlen, hostname, MAXLINE, port, MAXLINE, 0);
+//      printf("Accepted connection from (%s, %s)\n", hostname, port);
       add_client(connfd, &pool);
     }
 

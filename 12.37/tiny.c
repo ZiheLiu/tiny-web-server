@@ -21,8 +21,8 @@ int main(int argc, char **argv) {
     clientlen = sizeof(clientaddr);
     connfdp = Malloc(sizeof(int));
     *connfdp = Accept(listenfd, (SA *) &clientaddr, &clientlen);
-    Getnameinfo((SA *) &clientaddr, clientlen, hostname, MAXLINE, port, MAXLINE, 0);
-    printf("Accepted connection from (%s, %s)\n", hostname, port);
+//    Getnameinfo((SA *) &clientaddr, clientlen, hostname, MAXLINE, port, MAXLINE, 0);
+//    printf("Accepted connection from (%s, %s)\n", hostname, port);
 
     Pthread_create(&tid, NULL, thread, connfdp);
   }

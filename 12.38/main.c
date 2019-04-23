@@ -46,8 +46,8 @@ int main(int argc, char **argv) {
   for(;;) {
     clientlen = sizeof(struct sockaddr_storage);
     connfd = Accept(listenfd, (SA *) &clientaddr, &clientlen);
-    Getnameinfo((SA *) &clientaddr, clientlen, hostname, MAXLINE, port, MAXLINE, 0);
-    printf("Accepted connection from (%s, %s)\n", hostname, port);
+//    Getnameinfo((SA *) &clientaddr, clientlen, hostname, MAXLINE, port, MAXLINE, 0);
+//    printf("Accepted connection from (%s, %s)\n", hostname, port);
 
     sbuf_insert(&sbuf, connfd);
   }

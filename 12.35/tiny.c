@@ -19,8 +19,8 @@ int main(int argc, char **argv) {
   while (1) {
     clientlen = sizeof(clientaddr);
     connfd = Accept(listenfd, (SA *) &clientaddr, &clientlen);
-    Getnameinfo((SA *) &clientaddr, clientlen, hostname, MAXLINE, port, MAXLINE, 0);
-    printf("Accepted connection from (%s, %s)\n", hostname, port);
+//    Getnameinfo((SA *) &clientaddr, clientlen, hostname, MAXLINE, port, MAXLINE, 0);
+//    printf("Accepted connection from (%s, %s)\n", hostname, port);
 
     if (Fork() == 0) {
       Close(listenfd);
