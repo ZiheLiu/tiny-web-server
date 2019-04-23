@@ -20,9 +20,12 @@ void init_theads();
 
 void create_threads(int start, int end);
 
+void cancel_threads(int start, int end);
+
 void *serve_thread(void *vargp);
 
 void *adjust_threads(void *);
+
 
 
 int main(int argc, char **argv) {
@@ -66,6 +69,15 @@ void create_threads(int start, int end) {
   }
 }
 
+void cancel_threads(int start, int end) {
+  int i;
+  for (i = start; i < end; i++) {
+    P(&(threads[i].mutex));
+    Pthread_cancel(threads[i].tid);
+    V(&(threads[i].mutex));
+  }
+}
+
 void *serve_thread(void *vargp) {
   int idx = *(int*)vargp;
   Free(vargp);
@@ -104,13 +116,7 @@ void *adjust_threads(void *vargp) {
       }
 
       int half_n = nthreads / 2;
-
-      int i;
-      for (i = half_n; i < nthreads; i++) {
-        P(&(threads[i].mutex));
-        Pthread_cancel(threads[i].tid);
-        V(&(threads[i].mutex));
-      }
+      cancel_threads(half_n, nthreads);
       nthreads = half_n;
       continue;
     }
