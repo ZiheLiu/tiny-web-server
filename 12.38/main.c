@@ -23,8 +23,6 @@ void create_threads(int start, int end);
 void *serve_thread(void *vargp);
 
 void *adjust_threads(void *);
-void adjust_empty();
-void adjust_full();
 
 
 int main(int argc, char **argv) {
@@ -89,38 +87,32 @@ void *adjust_threads(void *vargp) {
 
   for(;;) {
     if (sbuf_full(sp)) {
-      adjust_full();
+      if (nthreads == THREAD_LIMIT) {
+        fprintf(stderr, "too many threads, can't double\n");
+        continue;
+      }
+
+      int double_n = 2 * nthreads;
+      create_threads(nthreads, double_n);
+      nthreads = double_n;
+      continue;
     }
 
     if (sbuf_empty(sp)) {
-      adjust_empty();
+      if (nthreads == 1) {
+        continue;
+      }
+
+      int half_n = nthreads / 2;
+
+      int i;
+      for (i = half_n; i < nthreads; i++) {
+        P(&(threads[i].mutex));
+        Pthread_cancel(threads[i].tid);
+        V(&(threads[i].mutex));
+      }
+      nthreads = half_n;
+      continue;
     }
   }
-}
-
-void adjust_empty() {
-  if (nthreads == THREAD_LIMIT) {
-    fprintf(stderr, "too many threads, can't double\n");
-    return;
-  }
-
-  int double_n = 2 * nthreads;
-  create_threads(nthreads, double_n);
-  nthreads = double_n;
-}
-
-void adjust_full() {
-  if (nthreads == 1) {
-    return;
-  }
-
-  int half_n = nthreads / 2;
-
-  int i;
-  for (i = half_n; i < nthreads; i++) {
-    P(&(threads[i].mutex));
-    Pthread_cancel(threads[i].tid);
-    V(&(threads[i].mutex));
-  }
-  nthreads = half_n;
 }
