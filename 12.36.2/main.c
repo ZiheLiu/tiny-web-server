@@ -4,26 +4,22 @@
 #include "echoservers.h"
 
 #define SBUFSIZE  4
-#define SUB_REACTOR_N  3
-#define WORKER_THREAD_N 3
+#define WORKER_THREAD_N 6
 #define THREAD_LIMIT 100
 
 
-static sbuf_t sbuf;
 
 
 typedef struct {
   pthread_t tid;
-  pthread_t tid2;
   sem_t mutex;
-  pool pool;
 } ithread;
 
 static ithread threads[THREAD_LIMIT];
+static sbuf_t sbuf;
+pool pools[WORKER_THREAD_N];
 
-void *subreactor_thread(void *vargp);
-
-void create_subreactor_threads(int start, int end);
+void *subreactor_thread();
 
 void *worker_thread(void *vargp);
 
@@ -33,6 +29,7 @@ int main(int argc, char **argv) {
   int listenfd, connfd;
   socklen_t clientlen;
   struct sockaddr_storage clientaddr;
+  pthread_t tid;
 
   if (argc != 2) {
     fprintf(stderr, "usage: %s <port>\n", argv[0]);
@@ -42,15 +39,14 @@ int main(int argc, char **argv) {
   listenfd = Open_listenfd(argv[1]);
 
   for (int i = 0; i < WORKER_THREAD_N; i++) {
-
-    init_pool(listenfd, &threads[i].pool);
+    init_pool(listenfd, &pools[i]);
   }
 
   sbuf_init(&sbuf, SBUFSIZE);
-  create_subreactor_threads(0, SUB_REACTOR_N);
+
+  Pthread_create(&tid, NULL, subreactor_thread, NULL);
 
   create_worker_threads(0, WORKER_THREAD_N);
-
 
   for(;;) {
     clientlen = sizeof(struct sockaddr_storage);
@@ -60,17 +56,13 @@ int main(int argc, char **argv) {
   }
 }
 
-void *subreactor_thread(void *vargp) {
-  int idx = *(int*)vargp;
-  Free(vargp);
+void *subreactor_thread() {
+  int next_pool_id = 0;
 
   for(;;) {
-    P(&(threads[idx].mutex));
-
     int connfd = sbuf_remove(&sbuf);
-    add_client(connfd, &threads[idx].pool);
-
-    V(&(threads[idx].mutex));
+    add_client(connfd, &pools[next_pool_id]);
+    next_pool_id = (next_pool_id + 1) % WORKER_THREAD_N;
   }
 }
 
@@ -79,20 +71,10 @@ void *worker_thread(void *vargp) {
   Free(vargp);
 
   for(;;) {
-    threads[idx].pool.ready_set = threads[idx].pool.read_set;
-    threads[idx].pool.nready = Select(threads[idx].pool.maxfd+1, &threads[idx].pool.ready_set, NULL, NULL, NULL);
+    pools[idx].ready_set = pools[idx].read_set;
+    pools[idx].nready = Select(pools[idx].maxfd+1, &pools[idx].ready_set, NULL, NULL, NULL);
 
-    check_clients(&threads[idx].pool);
-  }
-}
-
-void create_subreactor_threads(int start, int end) {
-  int i;
-  for (i = start; i < end; i++) {
-    Sem_init(&(threads[i].mutex), 0, 1);
-    int *arg = (int*)Malloc(sizeof(int));
-    *arg = i;
-    Pthread_create(&(threads[i].tid), NULL, subreactor_thread, arg);
+    check_clients(&pools[idx]);
   }
 }
 
@@ -101,7 +83,7 @@ void create_worker_threads(int start, int end) {
   for (i = start; i < end; i++) {
     int *arg = (int*)Malloc(sizeof(int));
     *arg = i;
-    Pthread_create(&(threads[i].tid2), NULL, worker_thread, arg);
+    Pthread_create(&(threads[i].tid), NULL, worker_thread, arg);
   }
 }
 
