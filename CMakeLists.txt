@@ -8,3 +8,5 @@ add_subdirectory(11.6)
 
 add_subdirectory(12.35)
 
+add_subdirectory(12.36)
+
