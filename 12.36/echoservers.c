@@ -49,7 +49,6 @@ void check_clients(pool *p)
 
   for (i = 0; (i <= p->maxi) && (p->nready > 0); i++) {
     connfd = p->clientfd[i];
-//    rio = p->clientrio[i];
 
     /* If the descriptor is ready, echo a text line from it */
     if ((connfd > 0) && (FD_ISSET(connfd, &p->ready_set))) {
