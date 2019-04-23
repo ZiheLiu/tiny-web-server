@@ -17,11 +17,11 @@ typedef struct {
 
 static ithread threads[THREAD_LIMIT];
 
-void *subreactor_thread(void *vargp);
+void *serve_thread(void *vargp);
 
 void *adjust_threads(void *);
 
-void create_subreactor_threads(int start, int end);
+void create_threads(int start, int end);
 
 int main(int argc, char **argv) {
   int listenfd, connfd;
@@ -38,7 +38,7 @@ int main(int argc, char **argv) {
 
   nthreads = SUB_REACTOR_N;
   sbuf_init(&sbuf, SBUFSIZE);
-  create_subreactor_threads(0, nthreads);
+  create_threads(0, nthreads);
 
   Pthread_create(&tid, NULL, adjust_threads, NULL);
 
@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
   }
 }
 
-void *subreactor_thread(void *vargp) {
+void *serve_thread(void *vargp) {
   int idx = *(int*)vargp;
   Free(vargp);
 
@@ -65,13 +65,13 @@ void *subreactor_thread(void *vargp) {
   }
 }
 
-void create_subreactor_threads(int start, int end) {
+void create_threads(int start, int end) {
   int i;
   for (i = start; i < end; i++) {
     Sem_init(&(threads[i].mutex), 0, 1);
     int *arg = (int*)Malloc(sizeof(int));
     *arg = i;
-    Pthread_create(&(threads[i].tid), NULL, subreactor_thread, arg);
+    Pthread_create(&(threads[i].tid), NULL, serve_thread, arg);
   }
 }
 
@@ -86,7 +86,7 @@ void *adjust_threads(void *vargp) {
       }
 
       int double_n = 2 * nthreads;
-      create_subreactor_threads(nthreads, double_n);
+      create_threads(nthreads, double_n);
       nthreads = double_n;
       continue;
     }
