@@ -41,17 +41,15 @@ int sbuf_remove(sbuf_t *sp)
 }
 
 int sbuf_empty(sbuf_t *sp) {
-  int e;
   P(&sp->mutex);
-  e = sp->front == sp->rear;
+  int is_empty = sp->front == sp->rear;
   V(&sp->mutex);
-  return e;
+  return is_empty;
 }
 
 int sbuf_full(sbuf_t *sp) {
-  int f;
   P(&sp->mutex);
-  f = (sp->rear - sp->front) == sp->n;
+  int is_full = (sp->rear - sp->front) == sp->n;
   V(&sp->mutex);
-  return f;
+  return is_full;
 }

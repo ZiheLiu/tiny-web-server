@@ -23,4 +23,4 @@ int sbuf_empty(sbuf_t *sp);
 
 int sbuf_full(sbuf_t *sp);
 
-#endif
+#endif // __SBUF_H__

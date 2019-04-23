@@ -2,12 +2,9 @@
 #include "sbuf.h"
 #include "tiny.h"
 
-#define SBUFSIZE  4
-#define SUB_REACTOR_N  1
+#define SBUF_SIZE  4
+#define INIT_THREAD_N  1
 #define THREAD_LIMIT 4096
-
-static int nthreads;
-static sbuf_t sbuf;
 
 
 typedef struct {
@@ -16,12 +13,19 @@ typedef struct {
 } ithread;
 
 static ithread threads[THREAD_LIMIT];
+static int nthreads;
+static sbuf_t sbuf;
+
+void init_theads();
+
+void create_threads(int start, int end);
 
 void *serve_thread(void *vargp);
 
 void *adjust_threads(void *);
+void adjust_empty();
+void adjust_full();
 
-void create_threads(int start, int end);
 
 int main(int argc, char **argv) {
   int listenfd, connfd;
@@ -36,10 +40,7 @@ int main(int argc, char **argv) {
 
   listenfd = Open_listenfd(argv[1]);
 
-  nthreads = SUB_REACTOR_N;
-  sbuf_init(&sbuf, SBUFSIZE);
-  create_threads(0, nthreads);
-
+  init_theads();
   Pthread_create(&tid, NULL, adjust_threads, NULL);
 
   for(;;) {
@@ -47,6 +48,23 @@ int main(int argc, char **argv) {
     connfd = Accept(listenfd, (SA *) &clientaddr, &clientlen);
 
     sbuf_insert(&sbuf, connfd);
+  }
+}
+
+void init_theads() {
+  nthreads = INIT_THREAD_N;
+  sbuf_init(&sbuf, SBUF_SIZE);
+  create_threads(0, nthreads);
+}
+
+
+void create_threads(int start, int end) {
+  int i;
+  for (i = start; i < end; i++) {
+    Sem_init(&(threads[i].mutex), 0, 1);
+    int *arg = (int*)Malloc(sizeof(int));
+    *arg = i;
+    Pthread_create(&(threads[i].tid), NULL, serve_thread, arg);
   }
 }
 
@@ -65,46 +83,44 @@ void *serve_thread(void *vargp) {
   }
 }
 
-void create_threads(int start, int end) {
-  int i;
-  for (i = start; i < end; i++) {
-    Sem_init(&(threads[i].mutex), 0, 1);
-    int *arg = (int*)Malloc(sizeof(int));
-    *arg = i;
-    Pthread_create(&(threads[i].tid), NULL, serve_thread, arg);
-  }
-}
 
 void *adjust_threads(void *vargp) {
   sbuf_t *sp = &sbuf;
 
   for(;;) {
     if (sbuf_full(sp)) {
-      if (nthreads == THREAD_LIMIT) {
-        fprintf(stderr, "too many threads, can't double\n");
-        continue;
-      }
-
-      int double_n = 2 * nthreads;
-      create_threads(nthreads, double_n);
-      nthreads = double_n;
-      continue;
+      adjust_full();
     }
 
     if (sbuf_empty(sp)) {
-      if (nthreads == 1)
-        continue;
-
-      int half_n = nthreads / 2;
-
-      int i;
-      for (i = half_n; i < nthreads; i++) {
-        P(&(threads[i].mutex));
-        Pthread_cancel(threads[i].tid);
-        V(&(threads[i].mutex));
-      }
-      nthreads = half_n;
-      continue;
+      adjust_empty();
     }
   }
+}
+
+void adjust_empty() {
+  if (nthreads == THREAD_LIMIT) {
+    fprintf(stderr, "too many threads, can't double\n");
+    return;
+  }
+
+  int double_n = 2 * nthreads;
+  create_threads(nthreads, double_n);
+  nthreads = double_n;
+}
+
+void adjust_full() {
+  if (nthreads == 1) {
+    return;
+  }
+
+  int half_n = nthreads / 2;
+
+  int i;
+  for (i = half_n; i < nthreads; i++) {
+    P(&(threads[i].mutex));
+    Pthread_cancel(threads[i].tid);
+    V(&(threads[i].mutex));
+  }
+  nthreads = half_n;
 }

@@ -1,3 +1,5 @@
+#ifndef __TINY_H__
+#define __TINY_H__
 
 void doit(int fd);
 
@@ -14,3 +16,5 @@ void serve_dynamic(int fd, char *filename, char* cgiargs);
 void clienterror(int fd, char *cause, char *errnum, char *shortmsg, char *longmsg);
 
 void *thread(void *vargp);
+
+#endif // __TINY_H__
