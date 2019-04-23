@@ -25,7 +25,6 @@ void create_threads(int start, int end);
 
 int main(int argc, char **argv) {
   int listenfd, connfd;
-  char hostname[MAXLINE], port[MAXLINE];
   socklen_t clientlen;
   struct sockaddr_storage clientaddr;
   pthread_t tid;
@@ -46,8 +45,6 @@ int main(int argc, char **argv) {
   for(;;) {
     clientlen = sizeof(struct sockaddr_storage);
     connfd = Accept(listenfd, (SA *) &clientaddr, &clientlen);
-//    Getnameinfo((SA *) &clientaddr, clientlen, hostname, MAXLINE, port, MAXLINE, 0);
-//    printf("Accepted connection from (%s, %s)\n", hostname, port);
 
     sbuf_insert(&sbuf, connfd);
   }

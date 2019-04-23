@@ -13,3 +13,5 @@ add_subdirectory(12.36)
 add_subdirectory(12.37)
 
 add_subdirectory(12.38)
+
+add_subdirectory(12.36.2)
